@@ -5,6 +5,7 @@ from pylab import *
 import sys
 import time
 from numba import jit
+import copy
 
 
 def computeEnergy(im):
@@ -157,6 +158,66 @@ def delete_horizontal_seam(seam, im, ori_img):
     return im,ori_img
 
 
+def carvColor(color_Img, grayImg, wp, hp):
+    for i in range(0,wp):
+        #print i
+        magnitude = computeEnergy(grayImg)
+        best_seam = find_vertical_seam(uint32(magnitude))
+        grayImg,color_Img = delete_verticle_seam(best_seam,grayImg,color_Img)
+
+
+    for i in range(0,hp):
+        #print i
+        magnitude = computeEnergy(grayImg)
+        best_seam = find_horizontal_seam(uint32(magnitude))
+        grayImg,color_Img = delete_horizontal_seam(best_seam,grayImg,color_Img)
+
+    return uint8(color_Img), uint8(grayImg)
+
+def delete_verticle_gray(seam,im):
+    # delete seam from gray_scale img array and return a new img
+    #new_im = im.reshape(1,im.shape(0) * im.shape(1))
+    row,col = im.shape
+    seam_index = []
+    for i in range(len(seam)):
+        index = (seam[i][0])*col + seam[i][1]
+        seam_index.append(index)
+    new_im = np.delete(im,seam_index)
+    im = new_im.reshape(row,col-1)
+
+    return im
+
+def delete_horizontal_gray(seam, im):
+    new_im = im.transpose()
+    row,col = new_im.shape
+
+    seam_index = []
+    for i in range(len(seam)):
+        index = (seam[i][0])*col + seam[i][1]
+        seam_index.append(index)
+    new_im = np.delete(new_im,seam_index)
+    im = new_im.reshape(row,col-1).transpose()
+    return im
+
+
+def carvGray(grayImg, wp, hp):
+    #garray = grayImg[:,:]
+    for i in range(0,wp):
+        #print i
+        magnitude = computeEnergy(grayImg)
+        best_seam = find_vertical_seam(uint32(magnitude))
+        grayImg = delete_verticle_gray(best_seam,grayImg)
+
+
+    for i in range(0,hp):
+        #print i
+        magnitude = computeEnergy(grayImg)
+        best_seam = find_horizontal_seam(uint32(magnitude))
+        grayImg = delete_horizontal_gray(best_seam,grayImg)
+
+    return uint8(grayImg)
+
+
 def carving(imgname, wp, hp):
     oriImg = Image.open(imgname)
     color_Img = array(oriImg)
@@ -205,6 +266,10 @@ def carving(imgname, wp, hp):
     pil_im.save('out.tiff')
     pil_color = Image.fromarray(uint8(color_Img))
     pil_color.save('output.jpg')
+
+
+
+
     #ori = Image.fromarray()
     '''
     for i in range(0,wp):
@@ -253,7 +318,17 @@ def carving(imgname, wp, hp):
 
 if __name__ == '__main__':
     t1 = time.time()
-    carving('castle.jpg',1,1)
+    #carving('castle.jpg',20,1)
+    oriImg = Image.open('castle.jpg')
+    color_Img = array(oriImg)
+    grayImg = oriImg.convert('L')
+    im = array(grayImg)
+
+    #tmp = carvColor(color_Img, im, 20,0)
+    tmp = carvGray(im,20,0)
+    tmp = Image.fromarray(tmp)
+    tmp.save('tmp.jpg')
+
     t2 = time.time()
 
     #testArray = np.array([1,1,2,3,3,5,7,1,3])

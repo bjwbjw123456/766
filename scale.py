@@ -41,7 +41,7 @@ if __name__ == '__main__':
     imgname = 'castle.jpg'
     oriImg = Image.open(imgname)
     a = array(oriImg)
-    tmp = scaleColor(a, 300, 200)
+    tmp = scaleColor(a, 200, 0)
     tmp = Image.fromarray(tmp)
     tmp.save("tmp.jpg")
 
