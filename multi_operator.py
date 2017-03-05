@@ -57,7 +57,7 @@ def dp(c_size,im,patchsize,verticle,ope1,ope2):
         i = c_size-1
         min = BDW(im,dp[i][1],patchsize)
         index = 0
-        for j in range(2,len(dp[i] -1)):
+        for j in range(2,len(dp[i])-1):
             diff = BDW(dp[i][j],im,patchsize)
             if diff < min:
                 min = diff
@@ -135,7 +135,7 @@ def multi_OP(filename, w , h, patchsize, opegray, opecolor):
         frequent.append((prev-1,cnt))
 
         for tup in frequent:
-            print 'tup0',tup[0]
+            print 'tup0',tup[0], tup[1]
             color_img,im = opecolor[tup[0]](color_img,im,tup[1],0)
 
     if h > 0:

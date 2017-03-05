@@ -33,6 +33,7 @@ def scaleColor(img,im,w ,h):
     r = np.zeros((height-h,width-w,d))
     for i in range(d):
         r[:,:,i] = scale(img[:,:,i], w, h)
+    im = scale(im,w,h)
     return uint8(r),im
 
 
