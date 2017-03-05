@@ -129,7 +129,6 @@ def delete_verticle_seam(seam,im,ori_img):
         seam_index.append(index)
     new_im = np.delete(im,seam_index)
     new_ori_img = np.zeros((row,col-1,3))
-    #print ori_img[:,:,0].shape
     new_ori_img[:,:,0] = np.delete(ori_img[:,:,0],seam_index).reshape(row,col-1)
     new_ori_img[:,:,1] = np.delete(ori_img[:,:,1],seam_index).reshape(row,col-1)
     new_ori_img[:,:,2] = np.delete(ori_img[:,:,2],seam_index).reshape(row,col-1)
