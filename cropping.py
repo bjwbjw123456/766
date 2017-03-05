@@ -3,20 +3,9 @@ from numpy import *
 from scipy.ndimage import filters
 from pylab import *
 import sys
-from numba import jit
+#from numba import jit
 
-
-
-
-
-def cropping(fileName, verticle, crop_size):
-    #print nHeight, nWidth
-
-    oriImg = Image.open(fileName);
-    grayImg = oriImg.convert('L')
-
-    im = array(grayImg)
-
+def croppingColor(color_img,im,w,h):
     imx = zeros(im.shape)
     filters.sobel(im,1,imx)
 
@@ -24,11 +13,12 @@ def cropping(fileName, verticle, crop_size):
     filters.sobel(im,0,imy)
 
     magnitude = sqrt(imx**2 + imy**2)
+
     i = 0
-    width, height = size(grayImg)
-    if verticle:
+    height,width = im.shape
+    if w > 0:
         l, r = 0, width-1
-        while i < crop_size:
+        while i < w:
             i += 1
             l_sum = sum(magnitude[:,l])
             r_sum = sum(magnitude[:,r])
@@ -36,14 +26,15 @@ def cropping(fileName, verticle, crop_size):
                 l = l + 1
             else:
                 r = r -1
-        tmp = array(oriImg)
+        #tmp = array(oriImg)
         list = range(l,r+1)
-        result = tmp[:,list]
+        result = color_img[:,list]
+        grayimg = im[:,list]
         resultImg = Image.fromarray(result)
         resultImg.save('tmp.jpg')
     else:
         l,r  = 0,height-1
-        while i < crop_size:
+        while i < h:
             i+= 1
             l_sum = sum(magnitude[l,:])
             r_sum = sum(magnitude[r,:])
@@ -51,13 +42,52 @@ def cropping(fileName, verticle, crop_size):
                 l += 1
             else:
                 r -= 1
-        tmp = array(oriImg)
+        #tmp = array(oriImg)
         list = range(l,r+1)
-        result = tmp[list,:]
+        result = color_img[list,:]
+        grayimg = im[list,:]
         resultImg = Image.fromarray(result)
         resultImg.save('tmp.jpg')
+    return result,grayimg
 
 
+
+def cropping(im, w, h):
+    #print nHeight, nWidth
+    imx = zeros(im.shape)
+    filters.sobel(im,1,imx)
+    imy = zeros(im.shape)
+    filters.sobel(im,0,imy)
+
+    magnitude = sqrt(imx**2 + imy**2)
+    i = 0
+    height,width = im.shape
+    if w > 0:
+        l, r = 0, width-1
+        while i < w:
+            i += 1
+            l_sum = sum(magnitude[:,l])
+            r_sum = sum(magnitude[:,r])
+            if l_sum < r_sum:
+                l = l + 1
+            else:
+                r = r -1
+
+        list = range(l,r+1)
+        result = im[:,list]
+    else:
+        l,r  = 0,height-1
+        while i < h:
+            i+= 1
+            l_sum = sum(magnitude[l,:])
+            r_sum = sum(magnitude[r,:])
+            if l_sum < r_sum:
+                l += 1
+            else:
+                r -= 1
+        list = range(l,r+1)
+        result = im[list,:]
+    return result
 
 
 
@@ -115,9 +145,19 @@ def cropping(fileName, verticle, crop_size):
 
 if __name__ == '__main__':
     fileName = sys.argv[1]
-    verticle_crop = int(sys.argv[2])
-    crop_size = int(sys.argv[3])
-    cropping(fileName, verticle_crop, crop_size)
+    #verticle_crop = int(sys.argv[2])
+    #crop_size = int(sys.argv[3])
+
+    oriImg = Image.open(fileName);
+    grayImg = oriImg.convert('L')
+    im = array(grayImg)
+    color_img = array(oriImg)
+
+    croppingColor(color_img,im,1,30)
+
+
+
+    #cropping(fileName, verticle_crop, crop_size)
 
 
     '''oriImg = Image.open('test2.jpg')

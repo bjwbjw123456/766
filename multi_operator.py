@@ -22,21 +22,63 @@ def dp(c_size,im,patchsize,verticle,ope1,ope2):
    # print len(dp),c_size
     dp[0].append(im)
     #parent.append()
+    #print verticle
     if verticle: # for removing verticle seam , decrease width
+        for i in range(1,c_size):
+            print i
+            ones = 0
+            twos = 1
+            for j in range(0,i+1):
+                if j == 0:
+                    img = ope1(dp[i-1][0],1,0)
+                    dp[i].append(img)
+                    parent[i].append(1)
+                elif j < i:
+                    #print i,j
+                    img1 = ope1(dp[i-1][j],1,0)
+                    img2 = ope2(dp[i-1][j-1],1,0)
+                    diff1 = BDW(im,img1,patchsize)
+                    diff2 = BDW(im,img2,patchsize)
+                    print 'diff1',diff1
+                    print 'diff2', diff2
+                    if(diff1 < diff2):
+                        ones += 1
+                        dp[i].append(img1)
+                        parent[i].append(1)
+                    else :
+                        twos += 1
+                        dp[i].append(img2)
+                        parent[i].append(2)
+                else:
+                    img = ope2(dp[i-1][i-1],1,0)
+                    dp[i].append(img)
+                    parent[i].append(2)
+            dp[i-1]  = []
+        i = c_size-1
+        min = BDW(im,dp[i][1],patchsize)
+        index = 0
+        for j in range(2,len(dp[i] -1)):
+            diff = BDW(dp[i][j],im,patchsize)
+            if diff < min:
+                min = diff
+                index = j
+        print 'min',min ,'index',index
+    else:
         for i in range(1,c_size):
             print i
             for j in range(0,i+1):
                 if j == 0:
                     img = ope1(dp[i-1][0],0,1)
                     dp[i].append(img)
-                    #print type(dp[i][j])
                     parent[i].append(1)
                 elif j < i:
                     #print i,j
                     img1 = ope1(dp[i-1][j],0,1)
                     img2 = ope2(dp[i-1][j-1],0,1)
-                    diff1 = BDW(im,img1,patchsize)
-                    diff2 = BDW(im,img2,patchsize)
+                    #print img1.shape, im.shape
+                    diff1 = BDW(im.transpose(),img1.transpose(),patchsize)
+                    diff2 = BDW(im.transpose(),img2.transpose(),patchsize)
+
                     if(diff1 < diff2):
                         dp[i].append(img1)
                         parent[i].append(1)
@@ -49,48 +91,16 @@ def dp(c_size,im,patchsize,verticle,ope1,ope2):
                     parent[i].append(2)
             dp[i-1]  = []
         i = c_size-1
-        min = BDW(im,dp[i][0],patchsize)
+        #print im.shape ,dp[i][0].shape
+        min = BDW(im.transpose(),dp[i][0].transpose(),patchsize)
         index = 0
         for j in range(1,len(dp[i])):
-            diff = BDW(dp[i][j],im,patchsize)
+            diff = BDW(dp[i][j].transpose(),im.transpose(),patchsize)
             if diff < min:
                 min = diff
                 index = j
-    else:
-        for i in range(1,c_size):
-            print i
-            for j in range(0,i+1):
-                if j == 0:
-                    img = ope1(dp[i-1][0],1,0)
-                    dp[i].append(img)
-                    parent[i].append(1)
-                elif j < i:
-                    print i,j
-                    img1 = ope1(dp[i-1][j],1,0)
-                    img2 = ope2(dp[i-1][j-1],1,0)
-                    diff1 = BDW(im,img1,patchsize)
-                    diff2 = BDW(im,img2,patchsize)
-                    if(diff1 < diff2):
-                        dp[i].append(img1)
-                        parent[i].append(1)
-                    else :
-                        dp[i].append(img2)
-                        parent[i].append(2)
-                else:
-                    img = ope2(dp[i-1][i-1],1,0)
-                    dp[i].append(img)
-                    parent[i].append(2)
-            dp[i-1]  = []
-    i = c_size-1
-    min = BDW(im,dp[i][0],patchsize)
-    index = 0
-    for j in range(1,len(dp[i])):
-        diff = BDW(dp[i][j],im,patchsize)
-        if diff < min:
-            min = diff
-            index = j
 
-    return parent,j
+    return parent,index
 
 def multi_OP(filename, w , h, patchsize, opegray, opecolor):
     oriImg = Image.open(filename)
@@ -111,6 +121,7 @@ def multi_OP(filename, w , h, patchsize, opegray, opecolor):
 
 
         opes.reverse()
+        print opes
         frequent = []
         prev = opes[0]
         cnt = 0
@@ -124,6 +135,7 @@ def multi_OP(filename, w , h, patchsize, opegray, opecolor):
         frequent.append((prev-1,cnt))
 
         for tup in frequent:
+            print 'tup0',tup[0]
             color_img,im = opecolor[tup[0]](color_img,im,tup[1],0)
 
     if h > 0:
@@ -138,6 +150,7 @@ def multi_OP(filename, w , h, patchsize, opegray, opecolor):
             if val == 2:
                 index -= 1
         opes.reverse()
+        print opes
         prev = opes[0]
         cnt = 0
         for ope in opes:
@@ -149,7 +162,7 @@ def multi_OP(filename, w , h, patchsize, opegray, opecolor):
                 prev = ope
         frequent.append((prev-1,cnt))
         for tup in frequent:
-            color_img,im = opecolor[tup[0]](color_img,im,tup[1],0)
+            color_img,im = opecolor[tup[0]](color_img,im,0,tup[1])
 
     pil_color = Image.fromarray(uint8(color_img))
     pil_color.save('output.jpg')
@@ -165,6 +178,6 @@ if __name__ == '__main__':
     grayImg = oriImg.convert('L')
     im = array(grayImg)
     '''
-    opegray = [ carvGray, cropping,scale]
-    opecolor = [carvColor,croppingColor,scaleColor]
-    multi_OP('human.jpg',0,30,16,opegray,opecolor)
+    opegray = [ carvGray, scale]
+    opecolor = [carvColor,scaleColor]
+    multi_OP('human.jpg',50,0,16,opegray,opecolor)

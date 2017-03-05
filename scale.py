@@ -4,7 +4,7 @@ from pylab import *
 from numba import jit
 
 @jit
-def scale(garray, h, w):
+def scale(garray, w, h):
     height,width = garray.shape
     H = int(height-h)
     W = int(width-w)
@@ -27,13 +27,13 @@ def scale(garray, h, w):
     return uint8(r)
 
 
-def scaleColor(img, h ,w):
+def scaleColor(img,im,w ,h):
     height,width,d = img.shape
     #print a.shape
     r = np.zeros((height-h,width-w,d))
     for i in range(d):
-        r[:,:,i] = scale(img[:,:,i], h, w)
-    return uint8(r)
+        r[:,:,i] = scale(img[:,:,i], w, h)
+    return uint8(r),im
 
 
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     imgname = 'castle.jpg'
     oriImg = Image.open(imgname)
     a = array(oriImg)
-    tmp = scaleColor(a, 200, 0)
+    tmp = scaleColor(a,0,0, 200)
     tmp = Image.fromarray(tmp)
     tmp.save("tmp.jpg")
 
