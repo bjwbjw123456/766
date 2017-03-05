@@ -178,6 +178,6 @@ if __name__ == '__main__':
     grayImg = oriImg.convert('L')
     im = array(grayImg)
     '''
-    opegray = [ carvGray, scale]
-    opecolor = [carvColor,scaleColor]
+    opegray = [ cropping,scale,carvGray]
+    opecolor = [croppingColor,scaleColor,carvColor]
     multi_OP('human.jpg',50,0,16,opegray,opecolor)
