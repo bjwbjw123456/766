@@ -113,6 +113,185 @@ def dp(c_size,im,patchsize,verticle,step,ope1,ope2):
 
     return parent,index
 
+def getTuples(x):
+    t = []
+    for i in range(x+1):
+        for j in range(x+1):
+            for k in range(x+1):
+                if i+j+k==x:
+                    t.append((i,j,k))
+                if i+j+k > x:
+                    break
+    return t
+
+def getParent(tup):
+    r = dict()
+    if (tup[0]!=0):
+        r[(tup[0]-1, tup[1], tup[2])] = 0
+    if (tup[1]!=0):
+        r[(tup[0], tup[1]-1, tup[2])] = 1
+    if (tup[2]!=0):
+        r[(tup[0], tup[1], tup[2]-1)] = 2
+    return r
+
+def dp3(c_size,im,patchsize,verticle,step,op):
+
+    dp = []
+    parent = []
+    resid = 0
+    if c_size % step != 0:
+        resid = c_size % step
+        dp.append(dict())
+        parent.append(dict())
+    c_size = c_size/step
+    c_size += 1
+    for i in range (c_size):
+        dp.append(dict())
+        parent.append(dict())
+
+    #t = (im,(-1,-1))
+   # print len(dp),c_size
+    dp[0][(0,0,0)] = im
+    #parent.append()
+    #print verticle
+    if verticle: # for removing verticle seam , decrease width
+        bestDiff = None
+        bestTuple = None
+        for i in range(1,c_size):
+
+            print i
+            t = getTuples(i)
+            for tup in t:
+                parents = getParent(tup)
+                Min = 0
+                bestOp = -1
+                for p in parents:
+                    img = dp[i-1][p]
+                    img = op[parents[p]](img, step, 0)
+                    diff = BDW(im, img, patchsize)
+                    if bestOp == -1:
+                        Min = diff
+                        bestOp = parents[p]
+                        bestImg = img
+                    else:
+                        if diff < Min:
+                            Min = diff
+                            bestOp = parents[p]
+                            bestImg = img
+                dp[i][tup] = bestImg
+                parent[i][tup] = bestOp
+                if i == c_size-1:
+                    if bestDiff == None:
+                        bestDiff = Min
+                        bestTuple = tup
+                    else:
+                        if Min<bestDiff:
+                            bestDiff = Min
+                            bestTuple = tup
+            dp[i-1] = dict()
+        return parent, bestTuple
+    else:
+        bestDiff = None
+        bestTuple = None
+        for i in range(1,c_size):
+
+            print i
+            t = getTuples(i)
+            for tup in t:
+                parents = getParent(tup)
+                Min = 0
+                bestOp = -1
+                for p in parents:
+                    img = dp[i-1][p]
+                    img = op[parents[p]](img, 0, step)
+                    diff = BDW(im.transpose(), img.transpose(), patchsize)
+                    if bestOp == -1:
+                        Min = diff
+                        bestOp = parents[p]
+                        bestImg = img
+                    else:
+                        if diff < Min:
+                            Min = diff
+                            bestOp = parents[p]
+                            bestImg = img
+                dp[i][tup] = bestImg
+                parent[i][tup] = bestOp
+                if i == c_size-1:
+                    if bestDiff == None:
+                        bestDiff = Min
+                        bestTuple = tup
+                    else:
+                        if Min<bestDiff:
+                            bestDiff = Min
+                            bestTuple = tup
+            dp[i-1] = dict()
+        return parent, bestTuple
+
+def multiOp3(filename, w, h, patchsize, step, opegray, opecolor):
+    oriImg = Image.open(filename)
+    grayImg = oriImg.convert('L')
+    color_img = array(oriImg)
+    im = array(grayImg)
+    if w > 0:
+        parent ,tup = dp3(w,im,patchsize,1,step,opegray)
+        ops = []
+        i = len(parent) -1
+        while i>0:
+            currentOp = parent[i][tup]
+            ops.append(currentOp)
+            tmp = [tup[0], tup[1], tup[2]]
+            tmp[currentOp]-=1
+            tup = (tmp[0],tmp[1],tmp[2])
+            i-=1
+        ops.reverse()
+        print ops
+        frequent = []
+        prev = ops[0]
+        cnt = 0
+        for ope in ops:
+            if ope == prev:
+                cnt+= 1
+            else:
+                frequent.append((prev,cnt))
+                cnt = 1
+                prev = ope
+        frequent.append((prev,cnt))
+
+        for tup in frequent:
+            print 'operator',tup[0], tup[1]
+            color_img,im = opecolor[tup[0]](color_img,im,tup[1]*step,0)
+    if h > 0:
+        parent ,tup = dp3(h,im,patchsize,0,step,opegray)
+        ops = []
+        i = len(parent) -1
+        while i>0:
+            currentOp = parent[i][tup]
+            ops.append(currentOp)
+            tmp = [tup[0], tup[1], tup[2]]
+            tmp[currentOp]-=1
+            tup = (tmp[0],tmp[1],tmp[2])
+            i-=1
+        ops.reverse()
+        print ops
+        frequent = []
+        prev = ops[0]
+        cnt = 0
+        for ope in ops:
+            if ope == prev:
+                cnt+= 1
+            else:
+                frequent.append((prev,cnt))
+                cnt = 1
+                prev = ope
+        frequent.append((prev,cnt))
+
+        for tup in frequent:
+            print 'operation',tup[0],tup[1]
+            color_img,im = opecolor[tup[0]](color_img,im,0,tup[1]*step)
+    pil_color = Image.fromarray(uint8(color_img))
+    pil_color.save('output.jpg')
+
+
 def multi_OP(filename, w , h, patchsize, step, opegray, opecolor):
     oriImg = Image.open(filename)
     grayImg = oriImg.convert('L')
@@ -191,6 +370,7 @@ if __name__ == '__main__':
     grayImg = oriImg.convert('L')
     im = array(grayImg)
     '''
-    opegray = [ carvGray, scale]
-    opecolor = [carvColor,scaleColor]
-    multi_OP('human.jpg',50,0,16,10,opegray,opecolor)
+    opegray = [ carvGray, scale, cropping]
+    opecolor = [carvColor,scaleColor, croppingColor]
+    #multi_OP('human.jpg',50,0,16,10,opegray,opecolor)
+    multiOp3('tree.png',200,0,16,10,opegray,opecolor)
