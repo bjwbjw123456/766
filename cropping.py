@@ -153,7 +153,7 @@ if __name__ == '__main__':
     im = array(grayImg)
     color_img = array(oriImg)
 
-    croppingColor(color_img,im,1,30)
+    croppingColor(color_img,im,500,0)
 
 
 

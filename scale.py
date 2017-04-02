@@ -39,10 +39,12 @@ def scaleColor(img,im,w ,h):
 
 
 if __name__ == '__main__':
-    imgname = 'castle.jpg'
+    imgname = 'empire.jpg'
     oriImg = Image.open(imgname)
+    grayImg = oriImg.convert('L')
+    im = array(grayImg)
     a = array(oriImg)
-    tmp = scaleColor(a,0,0, 200)
+    tmp,k = scaleColor(a,im,500, 0)
     tmp = Image.fromarray(tmp)
     tmp.save("tmp.jpg")
 

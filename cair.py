@@ -318,12 +318,12 @@ def carving(imgname, wp, hp):
 if __name__ == '__main__':
     t1 = time.time()
     #carving('castle.jpg',20,1)
-    oriImg = Image.open('tree.png')
+    oriImg = Image.open('empire.jpg')
     color_Img = array(oriImg)
     grayImg = oriImg.convert('L')
     im = array(grayImg)
 
-    tmp,gimg = carvColor(color_Img, im, 200,0)
+    tmp,gimg = carvColor(color_Img, im, 500,0)
     #tmp = carvGray(im,200,0)
     tmp = Image.fromarray(tmp)
     tmp.save('tmp.png')
