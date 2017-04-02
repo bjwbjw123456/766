@@ -224,6 +224,8 @@ def dp3(c_size,im,patchsize,verticle,step,op):
                 dp[i][tup] = bestImg
                 parent[i][tup] = bestOp
                 if i == c_size-1:
+                    if tup[0]<1 or tup[1]<1 or tup[2]<1:
+                        continue
                     #if tup[1]>5:
                     #    continue
                     if bestDiff == None:
@@ -382,4 +384,4 @@ if __name__ == '__main__':
     opegray = [ carvGray, scale, cropping]
     opecolor = [carvColor,scaleColor, croppingColor]
     #multi_OP('human.jpg',50,0,16,10,opegray,opecolor)
-    multiOp3('snow.png',200,0,16,20,opegray,opecolor)
+    multiOp3('snow.png',100,100,16,20,opegray,opecolor)
