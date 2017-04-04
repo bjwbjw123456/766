@@ -105,7 +105,7 @@ def find_multi_vertical_seam(magnitude,num):
 
 '''
 
-
+@jit(nogil=True)
 def find_one_vertical_seam(magnitude, visit):
     height,width = magnitude.shape
     dp = np.zeros((height,width))
@@ -126,20 +126,22 @@ def find_one_vertical_seam(magnitude, visit):
                         if not visit[j-1,index]:
                             parent.append((j-1,index))
                         index += 1
+                    parent = [parent[0]] + parent
                 else:
-                    if len(parent) == 3: # remove first of prev parent
-                        del parent[0]
+                    #if len(parent) == 3: # remove first of prev parent
+                    #    del parent[0]
                     cur = parent[-1][1]+1
-                    while cur < width and visit[j,cur]:
+                    while cur < width and visit[j-1,cur]:
                         cur += 1
-                    if cur < width:
-                        parent.append((j-1,cur))
-                Min = dp[j-1,parent[0][1]]
-                bestk = parent[0][1]
-                for p in range(1,len(parent)):
-                    if dp[j-1,parent[p][1]] < Min:
-                        Min = dp[j-1,parent[p][1]]
-                        bestk = parent[p][1]
+                    if cur >= width:
+                        cur -= 1
+                    parent.append((j-1,cur))
+                Min = dp[j-1,parent[-1][1]]
+                bestk = parent[-1][1]
+                for p in range(2,4):
+                    if dp[j-1,parent[-p][1]] < Min:
+                        Min = dp[j-1,parent[-p][1]]
+                        bestk = parent[-p][1]
                 parents[j,k] = bestk
                 dp[j,k] = magnitude[j,k] + Min
 
@@ -172,6 +174,7 @@ def find_multi_vertical_seams(magnitude,num):
     seams = []
     for i in range(num):
         seam,visit = find_one_vertical_seam(magnitude,visit)
+        #print sum(sum(visit))
         seams += seam
     '''
     height,width = magnitude.shape
@@ -600,7 +603,7 @@ if __name__ == '__main__':
     grayImg = oriImg.convert('L')
     im = array(grayImg)
 
-    tmp,gimg = carvColor(color_Img, im, -5,0)
+    tmp,gimg = carvColor(color_Img, im, -50,0)
     #tmp = carvGray(im,200,0)
     tmp = Image.fromarray(tmp)
     tmp.save('tmp.png')
