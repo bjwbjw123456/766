@@ -135,7 +135,7 @@ def find_one_vertical_seam(magnitude, visit):
                         cur += 1
                     if cur >= width:
                         cur -= 1
-                    parent.append((j-1,cur))
+                    parent.append(parent[-1])
                 Min = dp[j-1,parent[-1][1]]
                 bestk = parent[-1][1]
                 for p in range(2,4):
@@ -174,8 +174,9 @@ def find_multi_vertical_seams(magnitude,num):
     seams = []
     for i in range(num):
         seam,visit = find_one_vertical_seam(magnitude,visit)
-        #print sum(sum(visit))
         seams += seam
+        #print len(seam)
+        #print len(seams), sum(sum(visit)), len(set(seams))
     '''
     height,width = magnitude.shape
     visit = np.zeros((height,width))
@@ -367,8 +368,6 @@ def add_verticle_seam(seam,im,ori_img,k):
     for i in range(len(seam)):
         index = (seam[i][0])*col + seam[i][1]
         seam_index.append(index)
-    #print seam
-    print im.shape
     #values = im[seam]
     values = [im[s] for s in seam]
     new_im = np.insert(im,seam_index,values)
@@ -410,12 +409,14 @@ def carvColor(color_Img, grayImg, wp, hp):
         seam = find_multi_vertical_seams(uint32(magnitude),wp)
 
         row,col = grayImg.shape
+        #print row,col
         seam_index = []
         for i in range(len(seam)):
             index = (seam[i][0])*col + seam[i][1]
             seam_index.append(index)
         new_im = np.delete(grayImg,seam_index)
         new_ori_img = np.zeros((row,col-wp,3))
+        #print color_Img.shape, len(seam_index), new_ori_img.shape, np.delete(color_Img[:,:,0],seam_index).shape
         new_ori_img[:,:,0] = np.delete(color_Img[:,:,0],seam_index).reshape(row,col-wp)
         new_ori_img[:,:,1] = np.delete(color_Img[:,:,1],seam_index).reshape(row,col-wp)
         new_ori_img[:,:,2] = np.delete(color_Img[:,:,2],seam_index).reshape(row,col-wp)
@@ -442,11 +443,29 @@ def carvColor(color_Img, grayImg, wp, hp):
 
             grayImg,color_Img = add_verticle_seam(res,grayImg,color_Img,-wp)
     if hp >= 0:
-        for i in range(0,hp):
+        magnitude = computeEnergy(grayImg)
+        seam = find_multi_horizontal_seams(uint32(magnitude),hp)
+
+        grayImg = grayImg.transpose()
+        #color_Img = color_Img.transpose()    
+        row,col = grayImg.shape
+        seam_index = []
+        for i in range(len(seam)):
+            index = (seam[i][0])*col + seam[i][1]
+            seam_index.append(index)
+        new_im = np.delete(grayImg,seam_index)
+        new_ori_img = np.zeros((col-hp, row ,3))
+        new_ori_img[:,:,0] = np.delete(color_Img[:,:,0].transpose(),seam_index).reshape(row,col-hp).transpose()
+        new_ori_img[:,:,1] = np.delete(color_Img[:,:,1].transpose(),seam_index).reshape(row,col-hp).transpose()
+        new_ori_img[:,:,2] = np.delete(color_Img[:,:,2].transpose(),seam_index).reshape(row,col-hp).transpose()
+        grayImg = new_im.reshape(row,col-hp).transpose()
+        color_Img = new_ori_img
+
+        '''for i in range(0,hp):
             #print i
             magnitude = computeEnergy(grayImg)
             best_seam = find_horizontal_seam(uint32(magnitude))
-            grayImg,color_Img = delete_horizontal_seam(best_seam,grayImg,color_Img)
+            grayImg,color_Img = delete_horizontal_seam(best_seam,grayImg,color_Img)'''
     else:
 
         magnitude = computeEnergy(grayImg)
@@ -505,18 +524,39 @@ def add_horizontal_gray(seam,im):
 
 def carvGray(grayImg, wp, hp):
     #garray = grayImg[:,:]
-    for i in range(0,wp):
         #print i
+    if wp != 0:
         magnitude = computeEnergy(grayImg)
-        best_seam = find_vertical_seam(uint32(magnitude))
-        grayImg = delete_verticle_gray(best_seam,grayImg)
+        '''best_seam = find_vertical_seam(uint32(magnitude))
+        grayImg = delete_verticle_gray(best_seam,grayImg)'''
+        seam = find_multi_vertical_seams(uint32(magnitude),wp)
+
+        row,col = grayImg.shape
+        seam_index = []
+        for i in range(len(seam)):
+            index = (seam[i][0])*col + seam[i][1]
+            seam_index.append(index)
+        new_im = np.delete(grayImg,seam_index)
+        grayImg = new_im.reshape(row,col-wp)
+    
 
 
-    for i in range(0,hp):
-        #print i
+    #print i
+    if hp != 0:
         magnitude = computeEnergy(grayImg)
-        best_seam = find_horizontal_seam(uint32(magnitude))
-        grayImg = delete_horizontal_gray(best_seam,grayImg)
+        '''best_seam = find_horizontal_seam(uint32(magnitude))
+        grayImg = delete_horizontal_gray(best_seam,grayImg)'''
+        seam = find_multi_horizontal_seams(uint32(magnitude),hp)
+
+        grayImg = grayImg.transpose()
+        #color_Img = color_Img.transpose()    
+        row,col = grayImg.shape
+        seam_index = []
+        for i in range(len(seam)):
+            index = (seam[i][0])*col + seam[i][1]
+            seam_index.append(index)
+        new_im = np.delete(grayImg,seam_index)
+        grayImg = new_im.reshape(row,col-hp).transpose()
 
     return uint8(grayImg)
 
@@ -622,13 +662,13 @@ def carving(imgname, wp, hp):
 if __name__ == '__main__':
     t1 = time.time()
     #carving('castle.jpg',20,1)
-    oriImg = Image.open('empire.jpg')
+    oriImg = Image.open('snow.png')
     color_Img = array(oriImg)
     grayImg = oriImg.convert('L')
     im = array(grayImg)
 
-    tmp,gimg = carvColor(color_Img, im, 50,0)
-    #tmp = carvGray(im,200,0)
+    tmp,gimg = carvColor(color_Img, im, 20, 20)
+    #tmp = carvGray(im,20,0)
     tmp = Image.fromarray(tmp)
     tmp.save('tmp.png')
 
