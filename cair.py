@@ -105,6 +105,125 @@ def find_multi_vertical_seam(magnitude,num):
 
 '''
 
+@jit
+def find_forward_energy_seam(old_im,visit):
+    im = old_im.astype(np.int32)
+    height,width = im.shape
+    dp = np.zeros((height,width))
+    parents = np.zeros((height,width))
+    '''
+    index = []
+    for p in range(width):
+        if visit[0,p] == 0:
+            index.append(p)
+        '''
+    index = np.where(visit[0,:] == 0)[0]
+    # print len(index)
+    dp[0,index[0]] = abs(im[0,index[0]] - im[0,index[1]])
+    for x in range(1,len(index) -1):
+        dp[0,index[x]] = abs(im[0,index[x-1]] - im[0,index[x+1]])
+        #print dp[0,index[x]]
+    dp[0,index[-1]] = abs(im[0,index[-1]] - im[0,index[-2]])
+
+    parentIndex = index
+
+
+    for j in range(1,height):
+        '''
+        currentIndex = []
+        for p in range(width):
+            if visit[j,p] == 0:
+                currentIndex.append(p)
+        '''
+        currentIndex = np.where(visit[j,:] == 0)[0]
+        ''' if len(currentIndex) != len(index):
+            print "line:" ,j, "visit:", visit[j,:], len(currentIndex)'''
+
+        # compute the left most one
+        cu = abs(im[j,currentIndex[1]] - im[j,currentIndex[0]])
+        cr = cu + abs(im[j-1,parentIndex[0]] - im[j, currentIndex[1]])
+        mu = dp[j-1,parentIndex[0]]
+        mr = dp[j-1,parentIndex[1]]
+        if cu + mu < cr + mr:
+            parents[j,currentIndex[0]] = parentIndex[0]
+            dp[j,currentIndex[0]] = cu+mu
+        else:
+            parents[j,currentIndex[0]] = parentIndex[1]
+            dp[j,currentIndex[0]] = cr+mr
+
+        #compute the right most one
+        cu = abs(im[j,currentIndex[-2]] - im[j,currentIndex[-1]])
+        cl = cu + abs(im[j-1,parentIndex[-1]] - im[j,currentIndex[-2]])
+        mu = dp[j-1, parentIndex[-1]]
+        ml = dp[j-1, parentIndex[-2]]
+        if cu + mu < cl + ml:
+            parents[j,currentIndex[-1]] = parentIndex[-1]
+            dp[j,currentIndex[-1]] = cu+mu
+        else:
+            parents[j,currentIndex[-1]] = parentIndex[-2]
+            dp[j,currentIndex[-1]] = cl+ml
+
+
+        for k in range(1,len(currentIndex)-1):
+            cu = abs(im[j,currentIndex[k-1]] - im[j, currentIndex[k+1]])
+            cl = cu + abs(im[j-1, parentIndex[k]] - im[j,currentIndex[k-1]])
+            cr = cu + abs(im[j-1, parentIndex[k]] - im[j,currentIndex[k+1]])
+            mu = dp[j-1,parentIndex[k]]
+            ml = dp[j-1,parentIndex[k-1]]
+            mr = dp[j-1,parentIndex[k+1]]
+
+            #candidates = [cl+ml, cu+mu, cr+mr]
+            if cu + mu >= cl + ml and cr + mr >= cl + ml:
+                parents[j,currentIndex[k]] = parentIndex[k-1]
+                dp[j,currentIndex[k]] = cl + ml
+            elif cl + ml >= cu + mu and cr + mr >= cu + mu:
+                parents[j,currentIndex[k]] = parentIndex[k]
+                dp[j,currentIndex[k]] = cu + mu
+            else:
+                parents[j,currentIndex[k]] = parentIndex[k+1]
+                dp[j,currentIndex[k]] = cr + mr
+        parentIndex = currentIndex
+
+    j = height-1
+    seam = []
+    Min = None
+    bestindex = -1
+    for k in range(width):
+        if visit[j,k]:
+            continue
+        if Min==None or dp[j,k] < Min:
+            Min = dp[j,k]
+            bestindex = k
+
+    seam.append((j,bestindex))
+    visit[j,bestindex] = 1
+    next = int(parents[j,bestindex])
+    #print next
+    while j>0:
+        '''if visit[j-1,next] == 1:
+            print (j-1, next)'''
+        seam.append((j-1,next))
+        visit[j-1,next] = 1
+        j -=1
+        next = int(parents[j,next])
+    return seam,visit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @jit(nogil=True)
 def find_one_vertical_seam(magnitude, visit):
     height,width = magnitude.shape
@@ -168,13 +287,17 @@ def find_one_vertical_seam(magnitude, visit):
         next = int(parents[j,next])
     return seam,visit
 
-def find_multi_vertical_seams(magnitude,num):
+def find_multi_vertical_seams(magnitude,im,num,option):
     height,width = magnitude.shape
     visit = np.zeros((height,width))
     seams = []
     for i in range(num):
-        seam,visit = find_one_vertical_seam(magnitude,visit)
+        if option == 'b':
+            seam,visit = find_one_vertical_seam(magnitude,visit)
+        else:
+            seam,visit = find_forward_energy_seam(im,visit)
         seams += seam
+        #print sum(sum(visit))
         #print len(seam)
         #print len(seams), sum(sum(visit)), len(set(seams))
     '''
@@ -404,16 +527,17 @@ def add_horizontal_seam(seam,im,ori_img,k):
 
 
 def carvColor(color_Img, grayImg, wp, hp):
-    if wp >= 0:
+    if wp > 0:
         magnitude = computeEnergy(grayImg)
-        seam = find_multi_vertical_seams(uint32(magnitude),wp)
-
+        seam = find_multi_vertical_seams(uint32(magnitude),grayImg,wp,'b')
+        mark(seam, grayImg, color_Img, wp)
         row,col = grayImg.shape
         #print row,col
         seam_index = []
         for i in range(len(seam)):
             index = (seam[i][0])*col + seam[i][1]
             seam_index.append(index)
+        '''
         new_im = np.delete(grayImg,seam_index)
         new_ori_img = np.zeros((row,col-wp,3))
         #print color_Img.shape, len(seam_index), new_ori_img.shape, np.delete(color_Img[:,:,0],seam_index).shape
@@ -422,13 +546,13 @@ def carvColor(color_Img, grayImg, wp, hp):
         new_ori_img[:,:,2] = np.delete(color_Img[:,:,2],seam_index).reshape(row,col-wp)
         grayImg = new_im.reshape(row,col-wp)
         color_Img = new_ori_img
-
+        '''
         '''for i in range(0,wp):
          #print i
             magnitude = computeEnergy(grayImg)
             best_seam = find_vertical_seam(uint32(magnitude))
             grayImg,color_Img = delete_verticle_seam(best_seam,grayImg,color_Img)'''
-    else:
+    elif wp < 0:
             magnitude = computeEnergy(grayImg)
             best_seams = find_multi_vertical_seams(uint32(magnitude),-wp)
             res = best_seams
@@ -442,7 +566,7 @@ def carvColor(color_Img, grayImg, wp, hp):
 
 
             grayImg,color_Img = add_verticle_seam(res,grayImg,color_Img,-wp)
-    if hp >= 0:
+    if hp > 0:
         magnitude = computeEnergy(grayImg)
         seam = find_multi_horizontal_seams(uint32(magnitude),hp)
 
@@ -466,7 +590,7 @@ def carvColor(color_Img, grayImg, wp, hp):
             magnitude = computeEnergy(grayImg)
             best_seam = find_horizontal_seam(uint32(magnitude))
             grayImg,color_Img = delete_horizontal_seam(best_seam,grayImg,color_Img)'''
-    else:
+    elif hp < 0:
 
         magnitude = computeEnergy(grayImg)
         best_seams = find_multi_horizontal_seams(uint32(magnitude),-hp)
@@ -529,8 +653,7 @@ def carvGray(grayImg, wp, hp):
         magnitude = computeEnergy(grayImg)
         '''best_seam = find_vertical_seam(uint32(magnitude))
         grayImg = delete_verticle_gray(best_seam,grayImg)'''
-        seam = find_multi_vertical_seams(uint32(magnitude),wp)
-
+        seam = find_multi_vertical_seams(uint32(magnitude),im,wp,'b')
         row,col = grayImg.shape
         seam_index = []
         for i in range(len(seam)):
@@ -662,12 +785,12 @@ def carving(imgname, wp, hp):
 if __name__ == '__main__':
     t1 = time.time()
     #carving('castle.jpg',20,1)
-    oriImg = Image.open('snow.png')
+    oriImg = Image.open('empire.jpg')
     color_Img = array(oriImg)
     grayImg = oriImg.convert('L')
     im = array(grayImg)
 
-    tmp,gimg = carvColor(color_Img, im, 20, 20)
+    tmp,gimg = carvColor(color_Img, im, 20, 0)
     #tmp = carvGray(im,20,0)
     tmp = Image.fromarray(tmp)
     tmp.save('tmp.png')
