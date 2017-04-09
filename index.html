@@ -1,0 +1,352 @@
+
+<html>
+    <head>
+        <title>cs766 / Project</title>
+        <link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+            <link rel="stylesheet" title="Default" href="styles/github.css">
+                <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+                <script src="highlight.pack.js"></script>
+                
+                <style type="text/css">
+                    body {
+                        margin: 0px;
+                        width: 100%;
+                        font-family: 'Crimson Text', serif;
+                        font-size: 20px;
+                        background: #fcfcfc;
+                        text-align: justify;
+                    }
+                    h1 {
+                        font-family: 'Nunito', sans-serif;
+                        font-weight: normal;
+                        font-size: 28px;
+                        margin: 25px 0px 0px 0px;
+                        
+                    }
+                    
+                    h2 {
+                        font-family: 'Nunito', sans-serif;
+                        font-weight: normal;
+                        font-size: 32px;
+                        margin: 15px 0px 35px 0px;
+                        color: #333;
+                        word-spacing: 3px;
+                    }
+                    
+                    h3 {
+                        font-family: 'Nunito', sans-serif;
+                        font-weight: normal;
+                        font-size: 26px;
+                        margin: 10px 0px 10px 0px;
+                        color: #333;
+                        word-spacing: 2px;
+                    }
+                    h4 {
+                        font-family: 'Nunito', sans-serif;
+                        font-weight: normal;
+                        font-size: 22px;
+                        margin: 10px 0px 10px 0px;
+                        color: #333;
+                        word-spacing: 2px;
+                    }
+                    
+                    h5 {
+                        font-family: 'Nunito', sans-serif;
+                        font-weight: normal;
+                        font-size: 18px;
+                        margin: 10px 0px 10px 0px;
+                        color: #111;
+                        word-spacing: 2px;
+                    }
+                    
+                    p, li {
+                        color: #444;
+                    }
+                    
+                    a {
+                        color: #DE3737;
+                    }
+                    
+                    .container {
+                        margin: 0px auto 0px auto;
+                        width: 960px;
+                    }
+                    
+                    #header {
+                        background: #333;
+                        width: 100%;
+                    }
+                    
+                    #headersub {
+                        color: #ccc;
+                        width: 960px;
+                        margin: 0px auto 0px auto;
+                        padding: 20px 0px 20px 0px;
+                    }
+                    
+                    .chart {
+                        width: 480px;
+                    }
+                    .lol {
+                        font-size: 16px;
+                        color: #888;
+                        font-style: italic;
+                    }
+                    .sep {
+                        height: 1px;
+                        width: 100%;
+                        background: #999;
+                        margin: 20px 0px 20px 0px;
+                    }
+                    .footer{
+                        font-size: 16px;
+                    }
+                    .latex {
+                        width: 100%;
+                    }
+                    
+                    .latex img {
+                        display: block;
+                        margin: 0px auto 0px auto;
+                    }
+                    
+                    pre {
+                        font-family: 'Droid Sans Mono';
+                        font-size: 14px;
+                    }
+                    
+                    td img {
+                        vertical-align: middle;
+                    }
+                    
+                    #contents a {
+                    }
+                    </style>
+                <script type="text/javascript">
+                    hljs.initHighlightingOnLoad();
+                    </script>
+    </head>
+    <body>
+        <div id="header" >
+            <div id="headersub">
+                <h1>Jiawen Bao and Jiaan Wang </h1>
+                <h1> <span style="color: #DE3737">(jbao7 and jwang682)</span></h1>
+            </div>
+        </div>
+        <div class="container">
+            
+            <h1 style="font-size:48px;"> Image Retargarting </h1>
+            <h2>CS766 &nbsp;Computer Vision &nbsp;project</h2>
+            <!--<h5> Seam Carving for Content-Aware Image Resizing </h5>!-->
+            <h3> Background </h3>
+            <p>Our digital devices vary a lot in size and resolution, and this may cause problems in displaying the
+same image in different devices. For instance, when you find some fantastic pictures online, you
+may want to set it as your wallpaper in your iphone or laptop. However it may turn out not as good
+as your expectation since the problem of size and resolution. Also the experience of watching the
+same video in laptop and mobile phone is totally different. So how to resize a picture or video
+without losing important information is important and essential for us.
+Existing method mainly consist of scaling, cropping and Seam Carving[1]. Standa </p>
+            
+            
+            
+            <h3>Goal</h3>
+            <p> Given an image of a specific size, we aim to re-size the image to any different size gracefully. By
+gracefully we mean preserving the structure of the image and the shape of important objects in the
+image.  </p>
+            <table>
+                <tr align="center"><i>Retargeted to half of its width</i></tr>
+                <tr>
+                    <td>
+                        <img src="./img/river.jpg"  height = 300/>
+                    </td>
+                    <td> &nbsp&nbsp&nbsp&nbsp&nbsp &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </td>
+                    <td>
+                        <img src="./img/carved_river.png" height = 300 />
+                    </td>
+                </tr>
+            </table>
+            
+            <h3>Algorithm</h3>
+            <p> We use multiple operators including Standard Scaling, Cropping, and Seam Carving to resize image. We implement all three operators seperatedly. For Seam Carving :
+
+            <OL>
+                <li> The first step in algorithm is to compute the energy matrix. (Either Backward or Forward). 
+                <li> The next step is to find all needed optimal seams using Dynamic Programming. 
+                <li> After finding the optimal seams, we do the enlarge by duplicating the seams and remove them in the original image when reduce the size. 
+            
+            </OL>
+            </p>
+            <h3>Seam Carving in retargarting images</h3>
+            <table>
+                <tr>
+                    <td>
+                        <div>
+                        <img src="./img/empire.jpg"  height = 200/>
+                        <span text-align:center> Original Image </span>
+                        </div>
+                    </td>
+                    <td>
+                        <img src="./img/empire_seams.png"  height = 200/>
+                        <span text-align:center> 500 vertical best seams </span>
+                    </td>
+                    <td>
+                        <img src="./img/empire_r.png" height = 200/>
+                        <span text-align:center> Reduce 500 px in horizontal </span>
+                    </td><td>
+                        <img src="./img/empire_e.png" height = 200/>
+                        <span text-align:center> Enlarge 500 px in horizontal  </span>
+                    </td>
+                </tr>
+            </table>
+            <h3>Comparasion between Forward Energy and Backward Energy</h3>
+            <p>Backward energy function focuses on how much energy a seam itself contains, while forward energy function focuses
+            on how much energy a seam introduces if it's deleted.</p>
+            <table>
+                <tr>
+                    <td>
+                        <img src="./img/crowd.jpg"  height = 280/>
+                        <span>Original Image</span>
+                    </td>
+                    <td>
+                        <img src="./img/crowd_f.png" height = 280 />
+                        <span>Reduce width by 150 in Forward Energy </span>
+                    </td><td>
+                        <img src="./img/crowd_b.png" height = 280/>
+                        <span>Reduce with by 150 in Backward Energy </span>
+                    </td>
+
+                </tr>
+            </table>
+            
+            
+           
+            
+            <div style="clear:both">
+                <h3>What if Seam Carving is not sufficient?</h3>
+                
+                <p> Sometimes Seam Carving itself is not good in resizing images. For the following image, seam carving can produce a weird result even using forward energy function</p>
+                <table>
+                    <tr>
+                        <td>
+                            <img src="./img/snow.png" height = 400/>
+                            <span> Original Image </span>
+                        </td><td>
+                            &nbsp&nbsp
+                        </td><td>
+                            <img src="./img/snow_scb.png" height = 400 />
+                            <span> Reduce 200 px in width (Backward) </span>
+                        </td>
+                        <td>
+                            &nbsp&nbsp
+                        </td>
+                        <td>
+                            <img src="./img/snow_scf.png" height = 400 />
+                            <span> Reduce 200 px in width (Forward) </span>
+                        </td>
+                    </tr>
+                   
+                </table>
+                
+                
+           
+                
+                <h3>Using Multi-Operator!</h3>
+                
+                <p> We combined multiple operators( in our implementation we use Seam carving, Cropping, Scaling) together to handle this problem[2]. This algorithm used Bi-Directional Warping[2] to calculate the difference of two images. We could get a sequence of operations which produced the best result with the least BDW. This method combined multiple operators and could produce better results using Dynammic Programming</p>
+                <table>
+                    <tr>
+                        <td>
+                            <img src="./img/snow/snow.png" height = 300/>
+                            <scan>Original Image</scan>
+                        </td>
+                        <td>
+                            <img src="./img/snow/multi.jpg" height = 300/>
+                            <scan> Multi-Operator </scan>
+                        </td>
+                        <td>
+                            <img src="./img/snow/seam.png" height = 300/>
+                            <scan> Seam Carving </scan>
+                        </td>
+                        <td>
+                            <img src="./img/snow/scaling.jpg" height = 300/>
+                            <scan> Scaling </scan>
+                        </td>
+                        <td>
+                            <img src="./img/snow/cropping.jpg" height = 300/>
+                            <scan> Cropping </scan>
+                        </td>
+                        
+                    </tr>
+                </table>
+                
+              
+                
+                <h3>References </h3>
+                <h5>[1] Avidan, Shai, and Ariel Shamir. "Seam carving for content-aware image resizing." ACM Transactions on graphics (TOG). Vol. 26. No. 3. ACM, 2007. </h5>
+                <h5>[2] Rubinstein, Michael, Ariel Shamir, and Shai Avidan. "Multi-operator media retargeting." ACM Transactions on Graphics (TOG). Vol. 28. No. 3. ACM, 2009.</h5>
+
+                
+                
+                <h3>Other Results</h3>
+                
+                
+                <table>
+                    <tr>
+                        <td>
+                            <img src="./img/paris.jpg" width = 300/>
+                            <scan> Original Image </scan>
+                        </td><td>
+                            <img src="./img/paris_mk.png" width = 300/>
+                            <scan> 150 horizontal Best Seams </scan>
+                        </td><td>
+                            <img src="./img/paris_op.jpg" width = 300/>
+                            <scan> Multi-Operator </scan>
+                        </td>
+                        <td>
+                            <img src="./img/paris_sc.png"  width = 300/>
+                            <scan> Seam Carving </scan>
+                        </td>
+                    </tr>
+                </table>
+                
+
+                <table>
+                    <tr>
+                        <td>
+                            <img src="./img/lanchuang.jpg" width = 400/>
+                            <scan> Original Image </scan>
+                        </td><td>
+                            <img src="./img/lanchuang_r.png" width = 400/>
+                            <scan> Reduce height by 100px </scan>
+                        </td><td>
+                            <img src="./img/lanchuang_e.png" width = 400/>
+                            <scan> Increase height by 100px </scan>
+                        </td>
+                    </tr>
+                    
+                </table>
+
+                 <table>
+                    <tr>
+                        <td>
+                            <div>
+                            <img src="./img/tower.jpg" width = 450/>
+                            <br/><scan> Original Image </scan>
+                        </div>
+                    <td>
+                    &nbsp &nbsp &nbsp &nbsp
+                    </td>
+                        </td><td>
+                            <img src="./img/t1.png" width = 300/>
+                            <div>
+                            <scan> Increase height by 100px
+                            , reduce width by 200  </scan>
+                        </div>
+                        </td>
+                    </tr>
+                    
+                </table>
+                
+                
+    </body>
+</html>
