@@ -371,8 +371,8 @@ def find_multi_vertical_seams(magnitude,im,num,option):
     return seams
 
 @jit
-def find_multi_horizontal_seams(magnitude,num):
-    return find_multi_vertical_seams(magnitude.transpose(),num)
+def find_multi_horizontal_seams(magnitude,im,num,option):
+    return find_multi_vertical_seams(magnitude.transpose(),im.transpose(),num,option)
 #Todo: boosting
 
 @jit
@@ -556,7 +556,7 @@ def carvColor(color_Img, grayImg, wp, hp):
             grayImg,color_Img = delete_verticle_seam(best_seam,grayImg,color_Img)'''
     elif wp < 0:
             magnitude = computeEnergy(grayImg)
-            best_seams = find_multi_vertical_seams(uint32(magnitude),grayImg,-wp,'b')
+            best_seams = find_multi_vertical_seams(uint32(magnitude),grayImg,-wp,'f')
             res = best_seams
             #for seam in best_seams:
             #    res = res + seam
@@ -570,7 +570,7 @@ def carvColor(color_Img, grayImg, wp, hp):
             grayImg,color_Img = add_verticle_seam(res,grayImg,color_Img,-wp)
     if hp > 0:
         magnitude = computeEnergy(grayImg)
-        seam = find_multi_horizontal_seams(uint32(magnitude),hp)
+        seam = find_multi_horizontal_seams(uint32(magnitude),grayImg,hp,'f')
 
         grayImg = grayImg.transpose()
         #color_Img = color_Img.transpose()
@@ -595,7 +595,7 @@ def carvColor(color_Img, grayImg, wp, hp):
     elif hp < 0:
 
         magnitude = computeEnergy(grayImg)
-        best_seams = find_multi_horizontal_seams(uint32(magnitude),-hp)
+        best_seams = find_multi_horizontal_seams(uint32(magnitude),grayImg,-hp,'f')
         grayImg,color_Img = add_horizontal_seam(best_seams,grayImg,color_Img,-hp)
 
     return uint8(color_Img), uint8(grayImg)
@@ -655,7 +655,7 @@ def carvGray(grayImg, wp, hp):
         magnitude = computeEnergy(grayImg)
         '''best_seam = find_vertical_seam(uint32(magnitude))
         grayImg = delete_verticle_gray(best_seam,grayImg)'''
-        seam = find_multi_vertical_seams(uint32(magnitude),im,wp,'b')
+        seam = find_multi_vertical_seams(uint32(magnitude),grayImg,wp,'f')
         row,col = grayImg.shape
         seam_index = []
         for i in range(len(seam)):
@@ -671,7 +671,7 @@ def carvGray(grayImg, wp, hp):
         magnitude = computeEnergy(grayImg)
         '''best_seam = find_horizontal_seam(uint32(magnitude))
         grayImg = delete_horizontal_gray(best_seam,grayImg)'''
-        seam = find_multi_horizontal_seams(uint32(magnitude),hp)
+        seam = find_multi_horizontal_seams(uint32(magnitude),grayImg,hp,'f')
 
         grayImg = grayImg.transpose()
         #color_Img = color_Img.transpose()
@@ -787,13 +787,13 @@ def carving(imgname, wp, hp):
 if __name__ == '__main__':
     t1 = time.time()
     #carving('castle.jpg',20,1)
-    oriImg = Image.open('empire.jpg')
+    oriImg = Image.open('crowd.jpg')
     color_Img = array(oriImg)
     grayImg = oriImg.convert('L')
     im = array(grayImg)
 
-    tmp,gimg = carvColor(color_Img, im, -50 ,0)
-    #tmp = carvGray(im,20,0)
+    tmp,gimg = carvColor(color_Img, im, 150 ,0)
+    #tmp = carvGray(im,0,100)
     tmp = Image.fromarray(tmp)
     tmp.save('tmp.png')
 

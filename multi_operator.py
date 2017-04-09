@@ -384,4 +384,4 @@ if __name__ == '__main__':
     opegray = [ carvGray, scale, cropping]
     opecolor = [carvColor,scaleColor, croppingColor]
     #multi_OP('human.jpg',50,0,16,10,opegray,opecolor)
-    multiOp3('snow.png',100,100,16,20,opegray,opecolor)
+    multiOp3('crowd.jpg',100,100,16,20,opegray,opecolor)
